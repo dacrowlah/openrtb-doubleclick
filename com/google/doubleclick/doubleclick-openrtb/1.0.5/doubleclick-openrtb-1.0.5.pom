@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>doubleclick-core</artifactId>
+  <artifactId>doubleclick-openrtb</artifactId>
   <packaging>jar</packaging>
-  <name>Google DoubleClick Core</name>
+  <name>Google DoubleClick OpenRTB</name>
 
   <parent>
     <groupId>com.google.doubleclick</groupId>
@@ -28,19 +28,30 @@
       <version>${guavaVersion}</version>
     </dependency>
     <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>${metricsVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${fasterxmlJacksonVersion}</version>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4jVersion}</version>
     </dependency>
+
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>${injectVersion}</version>
+      <groupId>com.google.openrtb</groupId>
+      <artifactId>openrtb-core</artifactId>
+      <version>${openrtbVersion}</version>
     </dependency>
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
-      <artifactId>metrics-core</artifactId>
-      <version>${metricsVersion}</version>
+      <groupId>com.google.doubleclick</groupId>
+      <artifactId>doubleclick-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -59,6 +70,13 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-jdk14</artifactId>
       <version>${slf4jVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.doubleclick</groupId>
+      <artifactId>doubleclick-core</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -107,8 +125,10 @@
           <format>html</format>
           <instrumentation>
             <excludes>
-              <exclude>com/google/doubleclick/*.class</exclude>
-              <exclude>com/google/protos/adx/*.class</exclude>
+              <exclude>com/google/doubleclick/AdExt.class</exclude>
+              <exclude>com/google/doubleclick/AdExt$*.class</exclude>
+              <exclude>com/google/doubleclick/DcExt.class</exclude>
+              <exclude>com/google/doubleclick/DcExt$*.class</exclude>
             </excludes>
           </instrumentation>
         </configuration>
@@ -127,24 +147,21 @@
       <build>
         <plugins>
           <plugin>
-            <artifactId>maven-jar-plugin</artifactId>
+            <groupId>com.googlecode.maven-download-plugin</groupId>
+            <artifactId>download-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>make-test-jar</id>
+                <id>include-openrtb-proto</id>
+                <phase>initialize</phase>
                 <goals>
-                  <goal>test-jar</goal>
+                  <goal>wget</goal>
                 </goals>
                 <configuration>
-                  <includes>
-                    <include>adx-rtb-dictionaries/**</include>
-                  </includes>
+                  <url>${openrtbSource}/openrtb-core/src/main/protobuf/openrtb.proto</url>
+                  <outputDirectory>${protobufGenerated}/include</outputDirectory>
                 </configuration>
-                <phase>test-compile</phase>
               </execution>
             </executions>
-            <configuration>
-              <outputDirectory>${basedir}/target</outputDirectory>
-            </configuration>
           </plugin>
 
           <plugin>
@@ -154,7 +171,7 @@
                 <id>compile-protoc</id>
                 <phase>generate-sources</phase>
                 <configuration>
-                  <tasks>
+                  <target>
                     <mkdir dir="${protobufGenerated}" />
                     <path id="proto.path">
                       <fileset dir="${protobufSource}">
@@ -165,9 +182,11 @@
                     <exec executable="protoc" failonerror="true">
                       <arg value="--java_out=${protobufGenerated}" />
                       <arg value="-I${protobufSource}" />
+                      <arg value="-I${protobufSource}/../../../../doubleclick-core/src/main/protobuf/" />
+                      <arg value="-I${protobufGenerated}/include" />
                       <arg line="${proto.files}" />
                     </exec>
-                  </tasks>
+                  </target>
                 </configuration>
                 <goals>
                   <goal>run</goal>
