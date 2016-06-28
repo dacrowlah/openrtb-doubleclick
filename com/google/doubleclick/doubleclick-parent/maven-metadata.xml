@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata>
   <groupId>com.google.doubleclick</groupId>
-  <artifactId>doubleclick-openrtb</artifactId>
+  <artifactId>doubleclick-parent</artifactId>
   <versioning>
     <versions>
       <version>1.0.6-SNAPSHOT</version>
     </versions>
-    <lastUpdated>20160628221253</lastUpdated>
+    <lastUpdated>20160628221436</lastUpdated>
   </versioning>
 </metadata>
